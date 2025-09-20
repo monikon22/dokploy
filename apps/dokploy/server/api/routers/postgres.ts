@@ -6,9 +6,9 @@ import {
 	deployPostgres,
 	findBackupsByDbId,
 	findEnvironmentById,
+	findMemberById,
 	findPostgresById,
 	findProjectById,
-	findMemberById,
 	IS_CLOUD,
 	rebuildDatabase,
 	removePostgresById,
@@ -122,6 +122,20 @@ export const postgresRouter = createTRPCRouter({
 					message: "You are not authorized to access this Postgres",
 				});
 			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...postgresWithoutEnv } = postgres;
+					return postgresWithoutEnv;
+				}
+			}
+
 			return postgres;
 		}),
 

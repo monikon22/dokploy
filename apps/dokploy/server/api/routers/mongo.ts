@@ -5,10 +5,10 @@ import {
 	createMount,
 	deployMongo,
 	findBackupsByDbId,
-	findMongoById,
 	findEnvironmentById,
-	findProjectById,
 	findMemberById,
+	findMongoById,
+	findProjectById,
 	IS_CLOUD,
 	rebuildDatabase,
 	removeMongoById,
@@ -122,6 +122,20 @@ export const mongoRouter = createTRPCRouter({
 					message: "You are not authorized to access this mongo",
 				});
 			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...mongoWithoutEnv } = mongo;
+					return mongoWithoutEnv;
+				}
+			}
+
 			return mongo;
 		}),
 

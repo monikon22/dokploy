@@ -5,9 +5,9 @@ import {
 	createRedis,
 	deployRedis,
 	findEnvironmentById,
+	findMemberById,
 	findProjectById,
 	findRedisById,
-	findMemberById,
 	IS_CLOUD,
 	rebuildDatabase,
 	removeRedisById,
@@ -114,6 +114,20 @@ export const redisRouter = createTRPCRouter({
 					message: "You are not authorized to access this Redis",
 				});
 			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...redisWithoutEnv } = redis;
+					return redisWithoutEnv;
+				}
+			}
+
 			return redis;
 		}),
 

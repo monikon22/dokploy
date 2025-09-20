@@ -24,30 +24,42 @@ import {
 const filterEnvironmentServices = (
 	environment: any,
 	accessedServices: string[],
-) => ({
-	...environment,
-	applications: environment.applications.filter((app: any) =>
-		accessedServices.includes(app.applicationId),
-	),
-	mariadb: environment.mariadb.filter((db: any) =>
-		accessedServices.includes(db.mariadbId),
-	),
-	mongo: environment.mongo.filter((db: any) =>
-		accessedServices.includes(db.mongoId),
-	),
-	mysql: environment.mysql.filter((db: any) =>
-		accessedServices.includes(db.mysqlId),
-	),
-	postgres: environment.postgres.filter((db: any) =>
-		accessedServices.includes(db.postgresId),
-	),
-	redis: environment.redis.filter((db: any) =>
-		accessedServices.includes(db.redisId),
-	),
-	compose: environment.compose.filter((comp: any) =>
-		accessedServices.includes(comp.composeId),
-	),
-});
+	canAccessToServiceEnvironments = false,
+) => {
+	// Helper function to remove env field if user doesn't have access
+	const filterServiceData = (service: any) => {
+		if (!canAccessToServiceEnvironments) {
+			const { env, ...serviceWithoutEnv } = service;
+			return serviceWithoutEnv;
+		}
+		return service;
+	};
+
+	return {
+		...environment,
+		applications: environment.applications
+			.filter((app: any) => accessedServices.includes(app.applicationId))
+			.map(filterServiceData),
+		mariadb: environment.mariadb
+			.filter((db: any) => accessedServices.includes(db.mariadbId))
+			.map(filterServiceData),
+		mongo: environment.mongo
+			.filter((db: any) => accessedServices.includes(db.mongoId))
+			.map(filterServiceData),
+		mysql: environment.mysql
+			.filter((db: any) => accessedServices.includes(db.mysqlId))
+			.map(filterServiceData),
+		postgres: environment.postgres
+			.filter((db: any) => accessedServices.includes(db.postgresId))
+			.map(filterServiceData),
+		redis: environment.redis
+			.filter((db: any) => accessedServices.includes(db.redisId))
+			.map(filterServiceData),
+		compose: environment.compose
+			.filter((comp: any) => accessedServices.includes(comp.composeId))
+			.map(filterServiceData),
+	};
+};
 
 export const environmentRouter = createTRPCRouter({
 	create: protectedProcedure
@@ -109,8 +121,14 @@ export const environmentRouter = createTRPCRouter({
 
 				// Check environment access and filter services for members
 				if (ctx.user.role === "member") {
-					const { accessedEnvironments, accessedServices } =
-						await findMemberById(ctx.user.id, ctx.session.activeOrganizationId);
+					const {
+						accessedEnvironments,
+						accessedServices,
+						canAccessToServiceEnvironments,
+					} = await findMemberById(
+						ctx.user.id,
+						ctx.session.activeOrganizationId,
+					);
 
 					if (!accessedEnvironments.includes(environment.environmentId)) {
 						throw new TRPCError({
@@ -123,6 +141,7 @@ export const environmentRouter = createTRPCRouter({
 					const filteredEnvironment = filterEnvironmentServices(
 						environment,
 						accessedServices,
+						canAccessToServiceEnvironments,
 					);
 
 					return filteredEnvironment;
@@ -159,8 +178,14 @@ export const environmentRouter = createTRPCRouter({
 
 				// Filter environments for members based on their permissions
 				if (ctx.user.role === "member") {
-					const { accessedEnvironments, accessedServices } =
-						await findMemberById(ctx.user.id, ctx.session.activeOrganizationId);
+					const {
+						accessedEnvironments,
+						accessedServices,
+						canAccessToServiceEnvironments,
+					} = await findMemberById(
+						ctx.user.id,
+						ctx.session.activeOrganizationId,
+					);
 
 					// Filter environments to only show those the member has access to
 					const filteredEnvironments = environments
@@ -168,7 +193,11 @@ export const environmentRouter = createTRPCRouter({
 							accessedEnvironments.includes(environment.environmentId),
 						)
 						.map((environment) =>
-							filterEnvironmentServices(environment, accessedServices),
+							filterEnvironmentServices(
+								environment,
+								accessedServices,
+								canAccessToServiceEnvironments,
+							),
 						);
 
 					return filteredEnvironments;

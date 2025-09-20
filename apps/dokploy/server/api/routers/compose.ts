@@ -14,6 +14,7 @@ import {
 	findDomainsByComposeId,
 	findEnvironmentById,
 	findGitProviderById,
+	findMemberById,
 	findProjectById,
 	findServerById,
 	findUserById,
@@ -164,6 +165,23 @@ export const composeRouter = createTRPCRouter({
 				} catch {
 					hasGitProviderAccess = false;
 					unauthorizedProvider = compose.sourceType;
+				}
+			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...composeWithoutEnv } = compose;
+					return {
+						...composeWithoutEnv,
+						hasGitProviderAccess,
+						unauthorizedProvider,
+					};
 				}
 			}
 

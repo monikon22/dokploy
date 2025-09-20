@@ -5,10 +5,10 @@ import {
 	createMount,
 	deployMariadb,
 	findBackupsByDbId,
-	findMariadbById,
 	findEnvironmentById,
-	findProjectById,
+	findMariadbById,
 	findMemberById,
+	findProjectById,
 	IS_CLOUD,
 	rebuildDatabase,
 	removeMariadbById,
@@ -117,6 +117,20 @@ export const mariadbRouter = createTRPCRouter({
 					message: "You are not authorized to access this Mariadb",
 				});
 			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...mariadbWithoutEnv } = mariadb;
+					return mariadbWithoutEnv;
+				}
+			}
+
 			return mariadb;
 		}),
 

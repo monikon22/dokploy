@@ -6,9 +6,9 @@ import {
 	deployMySql,
 	findBackupsByDbId,
 	findEnvironmentById,
+	findMemberById,
 	findMySqlById,
 	findProjectById,
-	findMemberById,
 	IS_CLOUD,
 	rebuildDatabase,
 	removeMySqlById,
@@ -123,6 +123,20 @@ export const mysqlRouter = createTRPCRouter({
 					message: "You are not authorized to access this MySQL",
 				});
 			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...mysqlWithoutEnv } = mysql;
+					return mysqlWithoutEnv;
+				}
+			}
+
 			return mysql;
 		}),
 

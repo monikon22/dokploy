@@ -6,8 +6,8 @@ import {
 	findApplicationById,
 	findEnvironmentById,
 	findGitProviderById,
-	findProjectById,
 	findMemberById,
+	findProjectById,
 	getApplicationStats,
 	IS_CLOUD,
 	mechanizeDockerContainer,
@@ -169,6 +169,23 @@ export const applicationRouter = createTRPCRouter({
 				} catch {
 					hasGitProviderAccess = false;
 					unauthorizedProvider = application.sourceType;
+				}
+			}
+
+			// Check if member has access to environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					const { env, ...applicationWithoutEnv } = application;
+					return {
+						...applicationWithoutEnv,
+						hasGitProviderAccess,
+						unauthorizedProvider,
+					};
 				}
 			}
 

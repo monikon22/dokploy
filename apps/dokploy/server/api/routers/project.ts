@@ -101,10 +101,8 @@ export const projectRouter = createTRPCRouter({
 		.input(apiFindOneProject)
 		.query(async ({ input, ctx }) => {
 			if (ctx.user.role === "member") {
-				const { accessedServices } = await findMemberById(
-					ctx.user.id,
-					ctx.session.activeOrganizationId,
-				);
+				const { accessedServices, canAccessToServiceEnvironments } =
+					await findMemberById(ctx.user.id, ctx.session.activeOrganizationId);
 
 				await checkProjectAccess(
 					ctx.user.id,
@@ -112,6 +110,96 @@ export const projectRouter = createTRPCRouter({
 					ctx.session.activeOrganizationId,
 					input.projectId,
 				);
+
+				// Build columns for services - exclude env if user doesn't have permission
+				const applicationColumns = canAccessToServiceEnvironments
+					? undefined
+					: {
+							applicationId: true,
+							name: true,
+							appName: true,
+							description: true,
+							status: true,
+							createdAt: true,
+							buildType: true,
+							sourceType: true,
+							repository: true,
+							branch: true,
+							buildPath: true,
+							dockerfile: true,
+							dockerImage: true,
+							customGitUrl: true,
+							customGitBranch: true,
+							customGitBuildPath: true,
+							customGitSSHKeyId: true,
+							customDockerfile: true,
+							dockerBuildStage: true,
+							dropBuildPath: true,
+							healthCheckSwarm: true,
+							restartPolicySwarm: true,
+							replicas: true,
+							cpuLimit: true,
+							memoryLimit: true,
+							cpuReservation: true,
+							memoryReservation: true,
+							command: true,
+							refreshToken: true,
+							projectId: true,
+							serverId: true,
+							environmentId: true,
+							// env: excluded
+						};
+
+				const serviceColumns = canAccessToServiceEnvironments
+					? undefined
+					: {
+							mariadbId: true,
+							name: true,
+							appName: true,
+							description: true,
+							status: true,
+							createdAt: true,
+							databaseName: true,
+							databaseUser: true,
+							databasePassword: true,
+							rootPassword: true,
+							dockerImage: true,
+							command: true,
+							cpuLimit: true,
+							memoryLimit: true,
+							cpuReservation: true,
+							memoryReservation: true,
+							projectId: true,
+							serverId: true,
+							environmentId: true,
+							// env: excluded
+						};
+
+				const composeColumns = canAccessToServiceEnvironments
+					? undefined
+					: {
+							composeId: true,
+							name: true,
+							appName: true,
+							description: true,
+							status: true,
+							createdAt: true,
+							composeFile: true,
+							refreshToken: true,
+							sourceType: true,
+							repository: true,
+							branch: true,
+							buildPath: true,
+							customGitUrl: true,
+							customGitBranch: true,
+							customGitBuildPath: true,
+							customGitSSHKeyId: true,
+							command: true,
+							projectId: true,
+							serverId: true,
+							environmentId: true,
+							// env: excluded
+						};
 
 				const project = await db.query.projects.findFirst({
 					where: and(
@@ -126,33 +214,40 @@ export const projectRouter = createTRPCRouter({
 										applications.applicationId,
 										accessedServices,
 									),
+									columns: applicationColumns,
 								},
 								compose: {
 									where: buildServiceFilter(
 										compose.composeId,
 										accessedServices,
 									),
+									columns: composeColumns,
 								},
 								mariadb: {
 									where: buildServiceFilter(
 										mariadb.mariadbId,
 										accessedServices,
 									),
+									columns: serviceColumns,
 								},
 								mongo: {
 									where: buildServiceFilter(mongo.mongoId, accessedServices),
+									columns: serviceColumns,
 								},
 								mysql: {
 									where: buildServiceFilter(mysql.mysqlId, accessedServices),
+									columns: serviceColumns,
 								},
 								postgres: {
 									where: buildServiceFilter(
 										postgres.postgresId,
 										accessedServices,
 									),
+									columns: serviceColumns,
 								},
 								redis: {
 									where: buildServiceFilter(redis.redisId, accessedServices),
+									columns: serviceColumns,
 								},
 							},
 						},
@@ -179,8 +274,12 @@ export const projectRouter = createTRPCRouter({
 		}),
 	all: protectedProcedure.query(async ({ ctx }) => {
 		if (ctx.user.role === "member") {
-			const { accessedProjects, accessedEnvironments, accessedServices } =
-				await findMemberById(ctx.user.id, ctx.session.activeOrganizationId);
+			const {
+				accessedProjects,
+				accessedEnvironments,
+				accessedServices,
+				canAccessToServiceEnvironments,
+			} = await findMemberById(ctx.user.id, ctx.session.activeOrganizationId);
 
 			if (accessedProjects.length === 0) {
 				return [];
@@ -194,6 +293,96 @@ export const projectRouter = createTRPCRouter({
 							accessedEnvironments.map((envId) => sql`${envId}`),
 							sql`, `,
 						)})`;
+
+			// Build columns for services - exclude env if user doesn't have permission
+			const applicationColumns = canAccessToServiceEnvironments
+				? undefined
+				: {
+						applicationId: true,
+						name: true,
+						appName: true,
+						description: true,
+						status: true,
+						createdAt: true,
+						buildType: true,
+						sourceType: true,
+						repository: true,
+						branch: true,
+						buildPath: true,
+						dockerfile: true,
+						dockerImage: true,
+						customGitUrl: true,
+						customGitBranch: true,
+						customGitBuildPath: true,
+						customGitSSHKeyId: true,
+						customDockerfile: true,
+						dockerBuildStage: true,
+						dropBuildPath: true,
+						healthCheckSwarm: true,
+						restartPolicySwarm: true,
+						replicas: true,
+						cpuLimit: true,
+						memoryLimit: true,
+						cpuReservation: true,
+						memoryReservation: true,
+						command: true,
+						refreshToken: true,
+						projectId: true,
+						serverId: true,
+						environmentId: true,
+						// env: excluded
+					};
+
+			const serviceColumns = canAccessToServiceEnvironments
+				? undefined
+				: {
+						mariadbId: true,
+						name: true,
+						appName: true,
+						description: true,
+						status: true,
+						createdAt: true,
+						databaseName: true,
+						databaseUser: true,
+						databasePassword: true,
+						rootPassword: true,
+						dockerImage: true,
+						command: true,
+						cpuLimit: true,
+						memoryLimit: true,
+						cpuReservation: true,
+						memoryReservation: true,
+						projectId: true,
+						serverId: true,
+						environmentId: true,
+						// env: excluded
+					};
+
+			const composeColumns = canAccessToServiceEnvironments
+				? undefined
+				: {
+						composeId: true,
+						name: true,
+						appName: true,
+						description: true,
+						status: true,
+						createdAt: true,
+						composeFile: true,
+						refreshToken: true,
+						sourceType: true,
+						repository: true,
+						branch: true,
+						buildPath: true,
+						customGitUrl: true,
+						customGitBranch: true,
+						customGitBuildPath: true,
+						customGitSSHKeyId: true,
+						command: true,
+						projectId: true,
+						serverId: true,
+						environmentId: true,
+						// env: excluded
+					};
 
 			return await db.query.projects.findMany({
 				where: and(
@@ -213,28 +402,35 @@ export const projectRouter = createTRPCRouter({
 									accessedServices,
 								),
 								with: { domains: true },
+								columns: applicationColumns,
 							},
 							mariadb: {
 								where: buildServiceFilter(mariadb.mariadbId, accessedServices),
+								columns: serviceColumns,
 							},
 							mongo: {
 								where: buildServiceFilter(mongo.mongoId, accessedServices),
+								columns: serviceColumns,
 							},
 							mysql: {
 								where: buildServiceFilter(mysql.mysqlId, accessedServices),
+								columns: serviceColumns,
 							},
 							postgres: {
 								where: buildServiceFilter(
 									postgres.postgresId,
 									accessedServices,
 								),
+								columns: serviceColumns,
 							},
 							redis: {
 								where: buildServiceFilter(redis.redisId, accessedServices),
+								columns: serviceColumns,
 							},
 							compose: {
 								where: buildServiceFilter(compose.composeId, accessedServices),
 								with: { domains: true },
+								columns: composeColumns,
 							},
 						},
 					},
