@@ -200,9 +200,11 @@ const MySql = (
 												)}
 											>
 												<TabsTrigger value="general">General</TabsTrigger>
-												<TabsTrigger value="environment">
-													Environment
-												</TabsTrigger>
+												{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+													<TabsTrigger value="environment">
+														Environment
+													</TabsTrigger>
+												)}
 												<TabsTrigger value="logs">Logs</TabsTrigger>
 												{((data?.serverId && isCloud) || !data?.server) && (
 													<TabsTrigger value="monitoring">
@@ -221,11 +223,13 @@ const MySql = (
 												<ShowExternalMysqlCredentials mysqlId={mysqlId} />
 											</div>
 										</TabsContent>
-										<TabsContent value="environment" className="w-full">
-											<div className="flex flex-col gap-4 pt-2.5">
-												<ShowEnvironment id={mysqlId} type="mysql" />
-											</div>
-										</TabsContent>
+										{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+											<TabsContent value="environment" className="w-full">
+												<div className="flex flex-col gap-4 pt-2.5">
+													<ShowEnvironment id={mysqlId} type="mysql" />
+												</div>
+											</TabsContent>
+										)}
 										<TabsContent value="monitoring">
 											<div className="pt-2.5">
 												<div className="flex flex-col gap-4 border rounded-lg p-6">

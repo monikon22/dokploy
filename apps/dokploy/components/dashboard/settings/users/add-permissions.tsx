@@ -166,6 +166,8 @@ const addPermissions = z.object({
 	canAccessToAPI: z.boolean().optional().default(false),
 	canAccessToSSHKeys: z.boolean().optional().default(false),
 	canAccessToGitProviders: z.boolean().optional().default(false),
+	canAccessToServiceEnvironments: z.boolean().optional().default(false),
+	canAccessToServiceTerminal: z.boolean().optional().default(false),
 });
 
 type AddPermissions = z.infer<typeof addPermissions>;
@@ -212,6 +214,8 @@ export const AddUserPermissions = ({ userId }: Props) => {
 				canAccessToAPI: data.canAccessToAPI,
 				canAccessToSSHKeys: data.canAccessToSSHKeys,
 				canAccessToGitProviders: data.canAccessToGitProviders,
+				canAccessToServiceEnvironments: data.canAccessToServiceEnvironments,
+				canAccessToServiceTerminal: data.canAccessToServiceTerminal,
 			});
 		}
 	}, [form, form.formState.isSubmitSuccessful, form.reset, data]);
@@ -231,6 +235,8 @@ export const AddUserPermissions = ({ userId }: Props) => {
 			canAccessToAPI: data.canAccessToAPI,
 			canAccessToSSHKeys: data.canAccessToSSHKeys,
 			canAccessToGitProviders: data.canAccessToGitProviders,
+			canAccessToServiceEnvironments: data.canAccessToServiceEnvironments,
+			canAccessToServiceTerminal: data.canAccessToServiceTerminal,
 		})
 			.then(async () => {
 				toast.success("Permissions updated");
@@ -432,6 +438,46 @@ export const AddUserPermissions = ({ userId }: Props) => {
 										<FormLabel>Access to Git Providers</FormLabel>
 										<FormDescription>
 											Allow to users to access to the Git Providers section
+										</FormDescription>
+									</div>
+									<FormControl>
+										<Switch
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+									</FormControl>
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="canAccessToServiceEnvironments"
+							render={({ field }) => (
+								<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+									<div className="space-y-0.5">
+										<FormLabel>Access to Service Environments</FormLabel>
+										<FormDescription>
+											Allow users to access the Environment tab on service pages
+										</FormDescription>
+									</div>
+									<FormControl>
+										<Switch
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+									</FormControl>
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="canAccessToServiceTerminal"
+							render={({ field }) => (
+								<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+									<div className="space-y-0.5">
+										<FormLabel>Access to Service Terminal</FormLabel>
+										<FormDescription>
+											Allow users to access the "Open Terminal" button on service pages
 										</FormDescription>
 									</div>
 									<FormControl>

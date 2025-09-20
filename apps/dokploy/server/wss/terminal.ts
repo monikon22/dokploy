@@ -1,5 +1,5 @@
 import type http from "node:http";
-import { findServerById, IS_CLOUD, validateRequest } from "@dokploy/server";
+import { findServerById, findMemberById, IS_CLOUD, validateRequest } from "@dokploy/server";
 import { publicIpv4, publicIpv6 } from "public-ip";
 import { Client, type ConnectConfig } from "ssh2";
 import { WebSocketServer } from "ws";
@@ -71,6 +71,20 @@ export const setupTerminalWebSocketServer = (
 		if (!user || !session || !serverId) {
 			ws.close();
 			return;
+		}
+
+		// Check if user has permission to access terminal
+		if (user.role === "member") {
+			try {
+				const member = await findMemberById(user.id, session.activeOrganizationId);
+				if (!member.canAccessToServiceTerminal) {
+					ws.close(4003, "Access to service terminal denied");
+					return;
+				}
+			} catch (error) {
+				ws.close(4003, "Access to service terminal denied");
+				return;
+			}
 		}
 
 		let connectionDetails: ConnectConfig = {};

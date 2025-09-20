@@ -36,6 +36,7 @@ export const ShowGeneralApplication = ({ applicationId }: Props) => {
 		},
 		{ enabled: !!applicationId },
 	);
+	const { data: auth } = api.user.get.useQuery();
 	const { mutateAsync: update } = api.application.update.useMutation();
 	const { mutateAsync: start, isLoading: isStarting } =
 		api.application.start.useMutation();
@@ -258,18 +259,20 @@ export const ShowGeneralApplication = ({ applicationId }: Props) => {
 							</DialogAction>
 						)}
 					</TooltipProvider>
-					<DockerTerminalModal
-						appName={data?.appName || ""}
-						serverId={data?.serverId || ""}
-					>
-						<Button
-							variant="outline"
-							className="flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2"
+					{(auth?.role === "owner" || auth?.canAccessToServiceTerminal) && (
+						<DockerTerminalModal
+							appName={data?.appName || ""}
+							serverId={data?.serverId || ""}
 						>
-							<Terminal className="size-4 mr-1" />
-							Open Terminal
-						</Button>
-					</DockerTerminalModal>
+							<Button
+								variant="outline"
+								className="flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2"
+							>
+								<Terminal className="size-4 mr-1" />
+								Open Terminal
+							</Button>
+						</DockerTerminalModal>
+					)}
 					<div className="flex flex-row items-center gap-2 rounded-md px-4 py-2 border">
 						<span className="text-sm font-medium">Autodeploy</span>
 						<Switch

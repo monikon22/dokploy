@@ -43,6 +43,21 @@ export const setupDockerContainerTerminalWebSocketServer = (
 			ws.close();
 			return;
 		}
+
+		// Check if user has permission to access terminal
+		if (user.role === "member") {
+			const { findMemberById } = await import("@dokploy/server");
+			try {
+				const member = await findMemberById(user.id, session.activeOrganizationId);
+				if (!member.canAccessToServiceTerminal) {
+					ws.close(4003, "Access to service terminal denied");
+					return;
+				}
+			} catch (error) {
+				ws.close(4003, "Permission verification failed");
+				return;
+			}
+		}
 		try {
 			if (serverId) {
 				const server = await findServerById(serverId);

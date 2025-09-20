@@ -8,6 +8,7 @@ import {
 	findEnvironmentById,
 	findMySqlById,
 	findProjectById,
+	findMemberById,
 	IS_CLOUD,
 	rebuildDatabase,
 	removeMySqlById,
@@ -335,6 +336,21 @@ export const mysqlRouter = createTRPCRouter({
 					message: "You are not authorized to save this environment",
 				});
 			}
+
+			// Check if user has permission to access service environments
+			if (ctx.user.role === "member") {
+				const member = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+				if (!member.canAccessToServiceEnvironments) {
+					throw new TRPCError({
+						code: "UNAUTHORIZED",
+						message: "Access to service environments denied",
+					});
+				}
+			}
+
 			const service = await updateMySqlById(input.mysqlId, {
 				env: input.env,
 			});

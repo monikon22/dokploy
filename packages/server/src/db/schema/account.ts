@@ -108,6 +108,12 @@ export const member = pgTable("member", {
 	canAccessToTraefikFiles: boolean("canAccessToTraefikFiles")
 		.notNull()
 		.default(false),
+	canAccessToServiceEnvironments: boolean("canAccessToServiceEnvironments")
+		.notNull()
+		.default(false),
+	canAccessToServiceTerminal: boolean("canAccessToServiceTerminal")
+		.notNull()
+		.default(false),
 	accessedProjects: text("accesedProjects")
 		.array()
 		.notNull()

@@ -224,7 +224,9 @@ const Service = (
 									<div className="flex flex-row items-center justify-between w-full overflow-auto">
 										<TabsList className="flex gap-8 max-md:gap-4 justify-start">
 											<TabsTrigger value="general">General</TabsTrigger>
-											<TabsTrigger value="environment">Environment</TabsTrigger>
+											{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+												<TabsTrigger value="environment">Environment</TabsTrigger>
+											)}
 											<TabsTrigger value="domains">Domains</TabsTrigger>
 											<TabsTrigger value="preview-deployments">
 												Preview Deployments
@@ -247,11 +249,13 @@ const Service = (
 											<ShowGeneralApplication applicationId={applicationId} />
 										</div>
 									</TabsContent>
-									<TabsContent value="environment">
-										<div className="flex flex-col gap-4 pt-2.5">
-											<ShowEnvironment applicationId={applicationId} />
-										</div>
-									</TabsContent>
+									{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+										<TabsContent value="environment">
+											<div className="flex flex-col gap-4 pt-2.5">
+												<ShowEnvironment applicationId={applicationId} />
+											</div>
+										</TabsContent>
+									)}
 
 									<TabsContent value="monitoring">
 										<div className="pt-2.5">

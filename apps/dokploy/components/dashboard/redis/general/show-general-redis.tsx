@@ -21,6 +21,7 @@ interface Props {
 }
 
 export const ShowGeneralRedis = ({ redisId }: Props) => {
+	const { data: auth } = api.user.get.useQuery();
 	const { data, refetch } = api.redis.one.useQuery(
 		{
 			redisId,
@@ -220,29 +221,31 @@ export const ShowGeneralRedis = ({ redisId }: Props) => {
 								</DialogAction>
 							)}
 						</TooltipProvider>
-						<DockerTerminalModal
-							appName={data?.appName || ""}
-							serverId={data?.serverId || ""}
-						>
-							<Button
-								variant="outline"
-								className="flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2"
+						{(auth?.role === "owner" || auth?.canAccessToServiceTerminal) && (
+							<DockerTerminalModal
+								appName={data?.appName || ""}
+								serverId={data?.serverId || ""}
 							>
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<div className="flex items-center">
-											<Terminal className="size-4 mr-1" />
-											Open Terminal
-										</div>
-									</TooltipTrigger>
-									<TooltipPrimitive.Portal>
-										<TooltipContent sideOffset={5} className="z-[60]">
-											<p>Open a terminal to the Redis container</p>
-										</TooltipContent>
-									</TooltipPrimitive.Portal>
-								</Tooltip>
-							</Button>
-						</DockerTerminalModal>
+								<Button
+									variant="outline"
+									className="flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2"
+								>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<div className="flex items-center">
+												<Terminal className="size-4 mr-1" />
+												Open Terminal
+											</div>
+										</TooltipTrigger>
+										<TooltipPrimitive.Portal>
+											<TooltipContent sideOffset={5} className="z-[60]">
+												<p>Open a terminal to the Redis container</p>
+											</TooltipContent>
+										</TooltipPrimitive.Portal>
+									</Tooltip>
+								</Button>
+							</DockerTerminalModal>
+						)}
 					</CardContent>
 				</Card>
 				<DrawerLogs

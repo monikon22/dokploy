@@ -6,11 +6,15 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: dokploy/dokploy
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   docker-amd:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,15 +22,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set tag and version
         id: meta
         run: |
+          IMAGE_BASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             TAG="latest"
             VERSION=$(node -p "require('./apps/dokploy/package.json').version")
@@ -35,7 +41,7 @@ jobs:
           else
             TAG="feature"
           fi
-          echo "tags=${IMAGE_NAME}:${TAG}-amd64" >> $GITHUB_OUTPUT
+          echo "tags=${IMAGE_BASE}:${TAG}-amd64" >> $GITHUB_OUTPUT
 
       - name: Prepare env file
         run: |
@@ -51,6 +57,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
   docker-arm:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,15 +67,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set tag and version
         id: meta
         run: |
+          IMAGE_BASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           VERSION=$(node -p "require('./apps/dokploy/package.json').version")
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             TAG="latest"
@@ -76,7 +87,7 @@ jobs:
           else
             TAG="feature"
           fi
-          echo "tags=${IMAGE_NAME}:${TAG}-arm64" >> $GITHUB_OUTPUT
+          echo "tags=${IMAGE_BASE}:${TAG}-arm64" >> $GITHUB_OUTPUT
 
       - name: Prepare env file
         run: |
@@ -94,6 +105,9 @@ jobs:
   combine-manifests:
     needs: [docker-amd, docker-arm]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -101,37 +115,39 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and push manifests
         run: |
+          IMAGE_BASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             VERSION=$(node -p "require('./apps/dokploy/package.json').version")
             TAG="latest"
 
-            docker buildx imagetools create -t ${IMAGE_NAME}:${TAG} \
-              ${IMAGE_NAME}:${TAG}-amd64 \
-              ${IMAGE_NAME}:${TAG}-arm64
+            docker buildx imagetools create -t ${IMAGE_BASE}:${TAG} \
+              ${IMAGE_BASE}:${TAG}-amd64 \
+              ${IMAGE_BASE}:${TAG}-arm64
 
-            docker buildx imagetools create -t ${IMAGE_NAME}:${VERSION} \
-              ${IMAGE_NAME}:${TAG}-amd64 \
-              ${IMAGE_NAME}:${TAG}-arm64
+            docker buildx imagetools create -t ${IMAGE_BASE}:${VERSION} \
+              ${IMAGE_BASE}:${TAG}-amd64 \
+              ${IMAGE_BASE}:${TAG}-arm64
 
           elif [ "${{ github.ref }}" = "refs/heads/canary" ]; then
             TAG="canary"
-            docker buildx imagetools create -t ${IMAGE_NAME}:${TAG} \
-              ${IMAGE_NAME}:${TAG}-amd64 \
-              ${IMAGE_NAME}:${TAG}-arm64
+            docker buildx imagetools create -t ${IMAGE_BASE}:${TAG} \
+              ${IMAGE_BASE}:${TAG}-amd64 \
+              ${IMAGE_BASE}:${TAG}-arm64
 
           else
             TAG="feature"
-            docker buildx imagetools create -t ${IMAGE_NAME}:${TAG} \
-              ${IMAGE_NAME}:${TAG}-amd64 \
-              ${IMAGE_NAME}:${TAG}-arm64
+            docker buildx imagetools create -t ${IMAGE_BASE}:${TAG} \
+              ${IMAGE_BASE}:${TAG}-amd64 \
+              ${IMAGE_BASE}:${TAG}-arm64
           fi
 
   generate-release:

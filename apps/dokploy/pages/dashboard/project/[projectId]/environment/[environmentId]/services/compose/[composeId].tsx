@@ -217,7 +217,9 @@ const Service = (
 									<div className="flex flex-row items-center w-full overflow-auto">
 										<TabsList className="flex gap-8 max-md:gap-4 justify-start">
 											<TabsTrigger value="general">General</TabsTrigger>
-											<TabsTrigger value="environment">Environment</TabsTrigger>
+											{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+												<TabsTrigger value="environment">Environment</TabsTrigger>
+											)}
 											<TabsTrigger value="domains">Domains</TabsTrigger>
 											<TabsTrigger value="deployments">Deployments</TabsTrigger>
 											<TabsTrigger value="backups">Backups</TabsTrigger>
@@ -238,11 +240,13 @@ const Service = (
 											<ShowGeneralCompose composeId={composeId} />
 										</div>
 									</TabsContent>
-									<TabsContent value="environment">
-										<div className="flex flex-col gap-4 pt-2.5">
-											<ShowEnvironment id={composeId} type="compose" />
-										</div>
-									</TabsContent>
+									{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+										<TabsContent value="environment">
+											<div className="flex flex-col gap-4 pt-2.5">
+												<ShowEnvironment id={composeId} type="compose" />
+											</div>
+										</TabsContent>
+									)}
 									<TabsContent value="backups">
 										<div className="flex flex-col gap-4 pt-2.5">
 											<ShowBackups id={composeId} backupType="compose" />

@@ -7,6 +7,7 @@ import {
 	findEnvironmentById,
 	findGitProviderById,
 	findProjectById,
+	findMemberById,
 	getApplicationStats,
 	IS_CLOUD,
 	mechanizeDockerContainer,
@@ -357,6 +358,21 @@ export const applicationRouter = createTRPCRouter({
 					message: "You are not authorized to save this environment",
 				});
 			}
+
+			// Check if user has permission to access service environments
+			if (ctx.user.role === "member") {
+				const member = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+				if (!member.canAccessToServiceEnvironments) {
+					throw new TRPCError({
+						code: "UNAUTHORIZED",
+						message: "Access to service environments denied",
+					});
+				}
+			}
+
 			await updateApplication(input.applicationId, {
 				env: input.env,
 				buildArgs: input.buildArgs,

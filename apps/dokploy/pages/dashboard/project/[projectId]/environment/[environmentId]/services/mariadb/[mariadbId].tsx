@@ -199,7 +199,9 @@ const Mariadb = (
 											)}
 										>
 											<TabsTrigger value="general">General</TabsTrigger>
-											<TabsTrigger value="environment">Environment</TabsTrigger>
+											{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+												<TabsTrigger value="environment">Environment</TabsTrigger>
+											)}
 											<TabsTrigger value="logs">Logs</TabsTrigger>
 											{((data?.serverId && isCloud) || !data?.server) && (
 												<TabsTrigger value="monitoring">Monitoring</TabsTrigger>
@@ -216,11 +218,13 @@ const Mariadb = (
 											<ShowExternalMariadbCredentials mariadbId={mariadbId} />
 										</div>
 									</TabsContent>
-									<TabsContent value="environment">
-										<div className="flex flex-col gap-4 pt-2.5">
-											<ShowEnvironment id={mariadbId} type="mariadb" />
-										</div>
-									</TabsContent>
+									{(auth?.role === "owner" || auth?.canAccessToServiceEnvironments) && (
+										<TabsContent value="environment">
+											<div className="flex flex-col gap-4 pt-2.5">
+												<ShowEnvironment id={mariadbId} type="mariadb" />
+											</div>
+										</TabsContent>
+									)}
 									<TabsContent value="monitoring">
 										<div className="pt-2.5">
 											<div className="flex flex-col gap-4 border rounded-lg p-6">
