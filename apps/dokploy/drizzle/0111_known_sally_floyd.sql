@@ -1,0 +1,2 @@
+ALTER TABLE "member" ADD COLUMN "canAccessToServiceEnvironments" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "member" ADD COLUMN "canAccessToServiceTerminal" boolean DEFAULT false NOT NULL;
