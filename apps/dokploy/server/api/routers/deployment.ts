@@ -43,7 +43,7 @@ export const deploymentRouter = createTRPCRouter({
 	allByCompose: protectedProcedure
 		.input(apiFindAllByCompose)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId

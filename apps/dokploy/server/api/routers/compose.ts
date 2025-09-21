@@ -129,10 +129,7 @@ export const composeRouter = createTRPCRouter({
 				ctx.session.activeOrganizationId,
 			);
 
-			const compose = await findComposeById(
-				input.composeId,
-				ctx.user.role === "member" ? canAccessToServiceEnvironments : true,
-			);
+			const compose = await findComposeById(input.composeId, ctx);
 
 			if (
 				compose.environment.project.organizationId !==
@@ -187,7 +184,7 @@ export const composeRouter = createTRPCRouter({
 	update: protectedProcedure
 		.input(apiUpdateCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -227,7 +224,7 @@ export const composeRouter = createTRPCRouter({
 					"delete",
 				);
 			}
-			const composeResult = await findComposeById(input.composeId);
+			const composeResult = await findComposeById(input.composeId, ctx);
 
 			if (
 				composeResult.environment.project.organizationId !==
@@ -261,7 +258,7 @@ export const composeRouter = createTRPCRouter({
 	cleanQueues: protectedProcedure
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -277,7 +274,7 @@ export const composeRouter = createTRPCRouter({
 	loadServices: protectedProcedure
 		.input(apiFetchServices)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -297,7 +294,7 @@ export const composeRouter = createTRPCRouter({
 			}),
 		)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -317,7 +314,7 @@ export const composeRouter = createTRPCRouter({
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
 			try {
-				const compose = await findComposeById(input.composeId);
+				const compose = await findComposeById(input.composeId, ctx);
 
 				if (
 					compose.environment.project.organizationId !==
@@ -346,7 +343,7 @@ export const composeRouter = createTRPCRouter({
 	randomizeCompose: protectedProcedure
 		.input(apiRandomizeCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -361,7 +358,7 @@ export const composeRouter = createTRPCRouter({
 	isolatedDeployment: protectedProcedure
 		.input(apiRandomizeCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -379,14 +376,7 @@ export const composeRouter = createTRPCRouter({
 	getConvertedCompose: protectedProcedure
 		.input(apiFindCompose)
 		.query(async ({ input, ctx }) => {
-			const { canAccessToServiceEnvironments } = await findMemberById(
-				ctx.user.id,
-				ctx.session.activeOrganizationId,
-			);
-			const compose = await findComposeById(
-				input.composeId,
-				ctx.user.role === "member" ? canAccessToServiceEnvironments : true,
-			);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -406,7 +396,7 @@ export const composeRouter = createTRPCRouter({
 	deploy: protectedProcedure
 		.input(apiDeployCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 
 			if (
 				compose.environment.project.organizationId !==
@@ -443,7 +433,7 @@ export const composeRouter = createTRPCRouter({
 	redeploy: protectedProcedure
 		.input(apiRedeployCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -478,7 +468,7 @@ export const composeRouter = createTRPCRouter({
 	stop: protectedProcedure
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -495,7 +485,7 @@ export const composeRouter = createTRPCRouter({
 	start: protectedProcedure
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -512,7 +502,7 @@ export const composeRouter = createTRPCRouter({
 	getDefaultCommand: protectedProcedure
 		.input(apiFindCompose)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 
 			if (
 				compose.environment.project.organizationId !==
@@ -529,7 +519,7 @@ export const composeRouter = createTRPCRouter({
 	refreshToken: protectedProcedure
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -697,7 +687,7 @@ export const composeRouter = createTRPCRouter({
 	disconnectGitProvider: protectedProcedure
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -761,7 +751,7 @@ export const composeRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -813,7 +803,7 @@ export const composeRouter = createTRPCRouter({
 		)
 		.mutation(async ({ input, ctx }) => {
 			try {
-				const compose = await findComposeById(input.composeId);
+				const compose = await findComposeById(input.composeId, ctx);
 
 				if (
 					compose.environment.project.organizationId !==
@@ -882,7 +872,7 @@ export const composeRouter = createTRPCRouter({
 		)
 		.mutation(async ({ input, ctx }) => {
 			try {
-				const compose = await findComposeById(input.composeId);
+				const compose = await findComposeById(input.composeId, ctx);
 				const decodedData = Buffer.from(input.base64, "base64").toString(
 					"utf-8",
 				);
@@ -1007,7 +997,7 @@ export const composeRouter = createTRPCRouter({
 	cancelDeployment: protectedProcedure
 		.input(apiFindCompose)
 		.mutation(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId

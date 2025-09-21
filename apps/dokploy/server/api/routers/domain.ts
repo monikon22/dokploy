@@ -32,7 +32,7 @@ export const domainRouter = createTRPCRouter({
 		.mutation(async ({ input, ctx }) => {
 			try {
 				if (input.domainType === "compose" && input.composeId) {
-					const compose = await findComposeById(input.composeId);
+					const compose = await findComposeById(input.composeId, ctx);
 					if (
 						compose.environment.project.organizationId !==
 						ctx.session.activeOrganizationId
@@ -84,7 +84,7 @@ export const domainRouter = createTRPCRouter({
 	byComposeId: protectedProcedure
 		.input(apiFindCompose)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const compose = await findComposeById(input.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -136,7 +136,7 @@ export const domainRouter = createTRPCRouter({
 					});
 				}
 			} else if (currentDomain.composeId) {
-				const newCompose = await findComposeById(currentDomain.composeId);
+				const newCompose = await findComposeById(currentDomain.composeId, ctx);
 				if (
 					newCompose.environment.project.organizationId !==
 					ctx.session.activeOrganizationId
@@ -191,7 +191,7 @@ export const domainRouter = createTRPCRouter({
 				});
 			}
 		} else if (domain.composeId) {
-			const compose = await findComposeById(domain.composeId);
+			const compose = await findComposeById(domain.composeId, ctx);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -220,7 +220,7 @@ export const domainRouter = createTRPCRouter({
 					});
 				}
 			} else if (domain.composeId) {
-				const compose = await findComposeById(domain.composeId);
+				const compose = await findComposeById(domain.composeId, ctx);
 				if (
 					compose.environment.project.organizationId !==
 					ctx.session.activeOrganizationId

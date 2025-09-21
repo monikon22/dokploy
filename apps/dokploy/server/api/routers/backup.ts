@@ -419,7 +419,7 @@ export const backupRouter = createTRPCRouter({
 				}
 			}
 			if (input.backupType === "compose") {
-				const compose = await findComposeById(input.databaseId);
+				const compose = await findComposeById(input.databaseId, ctx);
 				return observable<string>((emit) => {
 					restoreComposeBackup(compose, destination, input, (log) => {
 						emit.next(log);

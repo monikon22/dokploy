@@ -55,6 +55,7 @@ import { encodeBase64 } from "../utils/docker/utils";
 import { getDokployUrl } from "./admin";
 import { createDeploymentCompose, updateDeploymentStatus } from "./deployment";
 import { validUniqueServerAppName } from "./project";
+import { findMemberById } from "./user";
 
 export type Compose = typeof compose.$inferSelect;
 
@@ -122,7 +123,16 @@ export const createComposeByTemplate = async (
 	return newDestination;
 };
 
-export const findComposeById = async (composeId: string, withEnv = true) => {
+export const findComposeById = async (composeId: string, ctx: any = {}) => {
+	let withEnv = true;
+	if (ctx && ctx.user.role === "member" && ctx.session) {
+		const { canAccessToServiceEnvironments } = await findMemberById(
+			ctx.user.id,
+			ctx.session.activeOrganizationId,
+		);
+
+		withEnv = canAccessToServiceEnvironments;
+	}
 	const result = await db.query.compose.findFirst({
 		where: eq(compose.composeId, composeId),
 		with: {
