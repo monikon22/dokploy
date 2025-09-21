@@ -125,7 +125,7 @@ export const createComposeByTemplate = async (
 
 export const findComposeById = async (composeId: string, ctx: any = {}) => {
 	let withEnv = true;
-	if (ctx && ctx.user.role === "member" && ctx.session) {
+	if (ctx && ctx.user?.role === "member" && ctx.session) {
 		const { canAccessToServiceEnvironments } = await findMemberById(
 			ctx.user.id,
 			ctx.session.activeOrganizationId,
