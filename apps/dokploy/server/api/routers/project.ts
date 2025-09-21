@@ -252,6 +252,7 @@ export const projectRouter = createTRPCRouter({
 							},
 						},
 					},
+					columns: { env: false },
 				});
 
 				if (!project) {
@@ -436,6 +437,7 @@ export const projectRouter = createTRPCRouter({
 					},
 				},
 				orderBy: desc(projects.createdAt),
+				columns: { env: false },
 			});
 		}
 
@@ -463,6 +465,7 @@ export const projectRouter = createTRPCRouter({
 			},
 			where: eq(projects.organizationId, ctx.session.activeOrganizationId),
 			orderBy: desc(projects.createdAt),
+			columns: { env: false },
 		});
 	}),
 

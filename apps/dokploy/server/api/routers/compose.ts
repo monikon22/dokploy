@@ -124,7 +124,16 @@ export const composeRouter = createTRPCRouter({
 				);
 			}
 
-			const compose = await findComposeById(input.composeId);
+			const { canAccessToServiceEnvironments } = await findMemberById(
+				ctx.user.id,
+				ctx.session.activeOrganizationId,
+			);
+
+			const compose = await findComposeById(
+				input.composeId,
+				ctx.user.role === "member" ? canAccessToServiceEnvironments : true,
+			);
+
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -168,23 +177,6 @@ export const composeRouter = createTRPCRouter({
 				}
 			}
 
-			// Check if member has access to environment variables
-			if (ctx.user.role === "member") {
-				const { canAccessToServiceEnvironments } = await findMemberById(
-					ctx.user.id,
-					ctx.session.activeOrganizationId,
-				);
-
-				if (!canAccessToServiceEnvironments) {
-					const { env, ...composeWithoutEnv } = compose;
-					return {
-						...composeWithoutEnv,
-						hasGitProviderAccess,
-						unauthorizedProvider,
-					};
-				}
-			}
-
 			return {
 				...compose,
 				hasGitProviderAccess,
@@ -205,6 +197,23 @@ export const composeRouter = createTRPCRouter({
 					message: "You are not authorized to update this compose",
 				});
 			}
+
+			// Check if trying to update env field and user has permissions
+			if (input.env !== undefined && ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (!canAccessToServiceEnvironments) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message:
+							"You don't have permission to update environment variables",
+					});
+				}
+			}
+
 			return updateCompose(input.composeId, input);
 		}),
 	delete: protectedProcedure
@@ -370,7 +379,14 @@ export const composeRouter = createTRPCRouter({
 	getConvertedCompose: protectedProcedure
 		.input(apiFindCompose)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId);
+			const { canAccessToServiceEnvironments } = await findMemberById(
+				ctx.user.id,
+				ctx.session.activeOrganizationId,
+			);
+			const compose = await findComposeById(
+				input.composeId,
+				ctx.user.role === "member" ? canAccessToServiceEnvironments : true,
+			);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
@@ -583,6 +599,26 @@ export const composeRouter = createTRPCRouter({
 				serverIp: serverIp,
 				projectName: projectName,
 			});
+
+			// Check if member has permission to set environment variables
+			if (ctx.user.role === "member") {
+				const { canAccessToServiceEnvironments } = await findMemberById(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+
+				if (
+					!canAccessToServiceEnvironments &&
+					generate.envs &&
+					generate.envs.length > 0
+				) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message:
+							"You don't have permission to create compose with environment variables",
+					});
+				}
+			}
 
 			const compose = await createComposeByTemplate({
 				...input,
@@ -903,6 +939,26 @@ export const composeRouter = createTRPCRouter({
 					serverIp: serverIp,
 					projectName: compose.appName,
 				});
+
+				// Check if member has permission to set environment variables
+				if (ctx.user.role === "member") {
+					const { canAccessToServiceEnvironments } = await findMemberById(
+						ctx.user.id,
+						ctx.session.activeOrganizationId,
+					);
+
+					if (
+						!canAccessToServiceEnvironments &&
+						processedTemplate.envs &&
+						processedTemplate.envs.length > 0
+					) {
+						throw new TRPCError({
+							code: "FORBIDDEN",
+							message:
+								"You don't have permission to import template with environment variables",
+						});
+					}
+				}
 
 				await updateCompose(input.composeId, {
 					composeFile: templateData.compose,

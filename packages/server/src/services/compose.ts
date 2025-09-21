@@ -122,7 +122,7 @@ export const createComposeByTemplate = async (
 	return newDestination;
 };
 
-export const findComposeById = async (composeId: string) => {
+export const findComposeById = async (composeId: string, withEnv = true) => {
 	const result = await db.query.compose.findFirst({
 		where: eq(compose.composeId, composeId),
 		with: {
@@ -146,6 +146,7 @@ export const findComposeById = async (composeId: string) => {
 				},
 			},
 		},
+		...(withEnv ? {} : { columns: { env: false } }),
 	});
 	if (!result) {
 		throw new TRPCError({
