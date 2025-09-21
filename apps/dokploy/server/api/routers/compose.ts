@@ -274,7 +274,7 @@ export const composeRouter = createTRPCRouter({
 	loadServices: protectedProcedure
 		.input(apiFetchServices)
 		.query(async ({ input, ctx }) => {
-			const compose = await findComposeById(input.composeId, ctx);
+			const compose = await findComposeById(input.composeId);
 			if (
 				compose.environment.project.organizationId !==
 				ctx.session.activeOrganizationId
